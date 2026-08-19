@@ -13,7 +13,7 @@ import { swaggerSpec, swaggerHtml } from './config/swagger.js';
 export function createApp(): Express {
   const app = express();
 
-  // Security headers.
+  // Security headers (strict defaults for the whole app).
   app.use(helmet());
 
   // CORS.
@@ -51,12 +51,26 @@ export function createApp(): Express {
     res.json({ success: true, status: 'ok' });
   });
 
-  // API documentation (CDN-based UI + JSON spec).
+  // API documentation (CDN-based UI + JSON spec). The docs page needs a
+  // relaxed Content Security Policy to load Swagger UI assets from the unpkg
+  // CDN and run its inline bootstrap script, so we override the strict global
+  // CSP for these two routes only.
   app.get('/api/docs/swagger.json', (_req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.send(swaggerSpec);
   });
   app.get('/api/docs', (_req, res) => {
+    res.setHeader(
+      'Content-Security-Policy',
+      [
+        "default-src 'self'",
+        "script-src 'self' 'unsafe-inline' https://unpkg.com",
+        "style-src 'self' 'unsafe-inline' https://unpkg.com",
+        "img-src 'self' data: https://unpkg.com",
+        "connect-src 'self' https://unpkg.com",
+        "font-src 'self' https://unpkg.com",
+      ].join('; '),
+    );
     res.setHeader('Content-Type', 'text/html');
     res.send(swaggerHtml);
   });
