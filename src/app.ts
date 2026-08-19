@@ -53,7 +53,8 @@ export function createApp(): Express {
   });
 
   // API documentation.
-  app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+  app.use('/api/docs', swaggerUi.serveFiles(swaggerSpec));
+  app.get('/api/docs', swaggerUi.setup(swaggerSpec));
 
   // Versioned API routes.
   app.use('/api/v1', apiRoutes);
