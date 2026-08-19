@@ -3,13 +3,12 @@ import helmet from 'helmet';
 import cors from 'cors';
 import { rateLimit } from 'express-rate-limit';
 import morgan from 'morgan';
-import swaggerUi from 'swagger-ui-express';
 import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 import apiRoutes from './routes/index.js';
 import { errorMiddleware } from './middleware/error.middleware.js';
 import { notFoundMiddleware } from './middleware/not-found.middleware.js';
-import { swaggerSpec } from './config/swagger.js';
+import { swaggerSpec, swaggerHtml } from './config/swagger.js';
 
 export function createApp(): Express {
   const app = express();
@@ -52,9 +51,15 @@ export function createApp(): Express {
     res.json({ success: true, status: 'ok' });
   });
 
-  // API documentation.
-  app.use('/api/docs', swaggerUi.serveFiles(swaggerSpec));
-  app.get('/api/docs', swaggerUi.setup(swaggerSpec));
+  // API documentation (CDN-based UI + JSON spec).
+  app.get('/api/docs/swagger.json', (_req, res) => {
+    res.setHeader('Content-Type', 'application/json');
+    res.send(swaggerSpec);
+  });
+  app.get('/api/docs', (_req, res) => {
+    res.setHeader('Content-Type', 'text/html');
+    res.send(swaggerHtml);
+  });
 
   // Versioned API routes.
   app.use('/api/v1', apiRoutes);
