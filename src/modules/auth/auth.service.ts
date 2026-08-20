@@ -3,7 +3,7 @@ import { AppError, ErrorCodes } from '../../utils/app-error.js';
 import { logger } from '../../utils/logger.js';
 import { mapProfile } from '../../middleware/auth.middleware.js';
 import { Profile } from '../../types/index.js';
-import { LoginInput, LoginResult } from './auth.types.js';
+import { LoginInput, LoginResult, RefreshInput, RefreshResult } from './auth.types.js';
 
 export class AuthService {
   /**
@@ -69,6 +69,29 @@ export class AuthService {
     }
 
     return mapProfile(data);
+  }
+
+  /** Exchange a refresh token for a new session. */
+  async refresh(input: RefreshInput): Promise<RefreshResult> {
+    const { data, error } = await supabase.auth.refreshSession({
+      refresh_token: input.refreshToken,
+    });
+
+    if (error || !data.session || !data.user) {
+      throw new AppError(401, ErrorCodes.UNAUTHORIZED, 'Invalid or expired refresh token');
+    }
+
+    return {
+      session: {
+        accessToken: data.session.access_token,
+        refreshToken: data.session.refresh_token,
+        expiresAt: data.session.expires_at ?? null,
+        user: {
+          id: data.user.id,
+          email: data.user.email ?? '',
+        },
+      },
+    };
   }
 
   /** End the Supabase session. */

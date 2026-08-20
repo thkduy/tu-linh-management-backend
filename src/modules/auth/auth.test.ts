@@ -139,6 +139,55 @@ describe('Auth', () => {
     });
   });
 
+  describe('POST /api/v1/auth/refresh', () => {
+    it('exchanges a refresh token for a new session', async () => {
+      supabase.auth.refreshSession.mockResolvedValue({
+        data: {
+          session: {
+            access_token: 'new-access-token',
+            refresh_token: 'new-refresh-token',
+            expires_at: 1234567890,
+          },
+          user: { id: adminProfile.id, email: adminProfile.email },
+        },
+        error: null,
+      });
+
+      const res = await request(app)
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: 'refresh-token' });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.session.accessToken).toBe('new-access-token');
+      expect(res.body.data.session.refreshToken).toBe('new-refresh-token');
+      expect(supabase.auth.refreshSession).toHaveBeenCalledWith({
+        refresh_token: 'refresh-token',
+      });
+    });
+
+    it('returns 401 for an invalid refresh token', async () => {
+      supabase.auth.refreshSession.mockResolvedValue({
+        data: { session: null, user: null },
+        error: { message: 'invalid refresh token' },
+      });
+
+      const res = await request(app)
+        .post('/api/v1/auth/refresh')
+        .send({ refreshToken: 'bad-token' });
+
+      expect(res.status).toBe(401);
+      expect(res.body.error.code).toBe('UNAUTHORIZED');
+    });
+
+    it('returns 400 when refresh token is missing', async () => {
+      const res = await request(app).post('/api/v1/auth/refresh').send({});
+
+      expect(res.status).toBe(400);
+      expect(res.body.error.code).toBe('VALIDATION_ERROR');
+    });
+  });
+
   describe('POST /api/v1/auth/logout', () => {
     it('ends the session', async () => {
       supabase.auth.getUser.mockResolvedValue({

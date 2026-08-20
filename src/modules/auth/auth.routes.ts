@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authController } from './auth.controller.js';
 import { authMiddleware } from '../../middleware/auth.middleware.js';
 import { validate } from '../../middleware/validation.middleware.js';
-import { loginSchema } from './auth.schema.js';
+import { loginSchema, refreshSchema } from './auth.schema.js';
 
 const router = Router();
 
@@ -41,6 +41,30 @@ const router = Router();
  *         description: Not an admin or inactive
  */
 router.post('/login', validate(loginSchema, 'body'), authController.login.bind(authController));
+
+/**
+ * @swagger
+ * /api/v1/auth/refresh:
+ *   post:
+ *     summary: Exchange a refresh token for a new session
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [refreshToken]
+ *             properties:
+ *               refreshToken:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Token refreshed successfully
+ *       401:
+ *         description: Invalid or expired refresh token
+ */
+router.post('/refresh', validate(refreshSchema, 'body'), authController.refresh.bind(authController));
 
 /**
  * @swagger

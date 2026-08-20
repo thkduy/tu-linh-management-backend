@@ -26,6 +26,16 @@ export class AuthController {
     }
   }
 
+  async refresh(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await authService.refresh(req.body);
+      logger.info('Session refreshed', { userId: result.session.user.id });
+      success(res, result, { message: 'Token refreshed successfully' });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const header = req.headers.authorization;

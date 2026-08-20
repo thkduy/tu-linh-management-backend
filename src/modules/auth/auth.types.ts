@@ -19,3 +19,11 @@ export interface LoginResult {
   session: AuthSession;
   profile: Profile;
 }
+
+export interface RefreshInput {
+  refreshToken: string;
+}
+
+export interface RefreshResult {
+  session: AuthSession;
+}

@@ -41,6 +41,7 @@ export const supabase = {
   auth: {
     signInWithPassword: vi.fn(),
     getUser: vi.fn(),
+    refreshSession: vi.fn(),
     admin: { signOut: vi.fn() },
   },
   from: vi.fn((table: string) => builderFor(table)),
@@ -66,6 +67,7 @@ export function resetSupabaseMocks(): void {
   builders.clear();
   supabase.auth.signInWithPassword.mockReset();
   supabase.auth.getUser.mockReset();
+  supabase.auth.refreshSession.mockReset();
   supabase.auth.admin.signOut.mockReset();
   supabase.from.mockClear();
   supabaseAdmin.auth.admin.createUser.mockReset();
